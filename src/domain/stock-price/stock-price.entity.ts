@@ -4,9 +4,10 @@ import {
   Entity,
   PrimaryGeneratedColumn,
 } from 'typeorm';
+import { StockPriceDto } from './stock-price.dto';
 
 @Entity()
-export class StockPrice {
+export class StockPrice implements StockPriceDto {
   @PrimaryGeneratedColumn()
   id: number;
 
