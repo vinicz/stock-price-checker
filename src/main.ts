@@ -1,7 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import * as morgan from 'morgan';
-import { ValidationPipe } from '@nestjs/common';
+import { ValidationPipe, VersioningType } from '@nestjs/common';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -18,8 +18,6 @@ async function bootstrap() {
         tokens.referrer(req, res),
         tokens['user-agent'](req, res),
         '-',
-        (req as any).user ? (req as any).user.clientId : 'no_user',
-        '-',
         tokens['response-time'](req, res),
         'ms',
       ].join(' '),
@@ -27,6 +25,9 @@ async function bootstrap() {
   );
 
   app.useGlobalPipes(new ValidationPipe({ transform: true }));
+  app.enableVersioning({
+    type: VersioningType.URI,
+  });
   await app.listen(process.env.PORT ?? 3000);
 }
 bootstrap();
