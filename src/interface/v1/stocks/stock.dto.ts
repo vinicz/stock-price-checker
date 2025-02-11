@@ -1,5 +1,5 @@
 import { Expose } from 'class-transformer';
-import { StockPrice } from 'src/domain/stock-price/stock-price.entity';
+import { StockPriceWithMovingAverageDto } from 'src/domain/stock-price/stock-price-with-moving-average.dto';
 
 export class StockDto {
   @Expose()
@@ -8,11 +8,14 @@ export class StockDto {
   price: number;
   @Expose()
   updatedAt: number;
+  @Expose()
+  movingAverage: number;
 
-  static fromStockPrice(stockPrice: StockPrice): StockDto {
+  static fromStockPrice(stockPrice: StockPriceWithMovingAverageDto): StockDto {
     return {
       symbol: stockPrice.symbol,
       price: stockPrice.price,
+      movingAverage: stockPrice.movingAverage,
       updatedAt: stockPrice.date.valueOf(),
     };
   }

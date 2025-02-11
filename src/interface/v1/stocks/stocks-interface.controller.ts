@@ -1,10 +1,10 @@
-import { Controller, Get, Header, Param } from '@nestjs/common';
-import { VERSION_PREFIX } from '../constants';
+import { Controller, Get, Header, Param, Put } from '@nestjs/common';
+import { VERSION } from '../constants';
 import { StocksInterfaceService } from './stocks-interface.service';
 
-const STOCKS_PATH = `${VERSION_PREFIX}/stocks`;
+const STOCKS_PATH = `/stocks`;
 
-@Controller(STOCKS_PATH)
+@Controller({ version: [VERSION], path: STOCKS_PATH })
 export class StocksInterfaceController {
   constructor(
     private readonly stocksInterfaceService: StocksInterfaceService,
@@ -12,7 +12,14 @@ export class StocksInterfaceController {
 
   @Get(`:symbol`)
   @Header('content-type', 'application/json')
-  rules(@Param('symbol') symbol: string) {
+  getStockPrice(@Param('symbol') symbol: string) {
     return this.stocksInterfaceService.getStockPriceForSymbol(symbol);
+  }
+
+  @Put(`:symbol`)
+  @Header('content-type', 'application/json')
+  async scheduleStockPriceUpdate(@Param('symbol') symbol: string) {
+    await this.stocksInterfaceService.scheduleStockPriceUpdate(symbol);
+    return { status: 'ok' };
   }
 }
