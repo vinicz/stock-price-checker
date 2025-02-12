@@ -1,0 +1,51 @@
+version: '3.7'
+
+services:
+  main:
+    container_name: main
+    build:
+      context: .
+      target: development
+    volumes:
+      - .:/usr/src/app
+      - /usr/src/app/node_modules
+    ports:
+      - ${PORT}:${PORT}
+    command:
+      - /bin/sh
+      - -c
+      - |
+        npm run lint
+        npm run test:e2e
+    env_file:
+      - .env
+    networks:
+      - webnet
+    depends_on:
+      - postgres
+  postgres:
+    container_name: postgres
+    image: postgres:12
+    networks:
+      - webnet
+    environment:
+      POSTGRES_PASSWORD: ${TYPEORM_PASSWORD}
+      POSTGRES_USER: ${TYPEORM_USERNAME}
+      POSTGRES_DB: ${TYPEORM_DATABASE}
+      PG_DATA: /var/lib/postgresql/data
+    ports:
+      - ${TYPEORM_PORT}:${TYPEORM_PORT}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+  adminer:
+    container_name: adminer
+    image: adminer
+    depends_on:
+      - postgres
+    restart: always
+    ports:
+      - 8081:8080
+networks:
+  webnet:
+volumes:
+  pgdata:
