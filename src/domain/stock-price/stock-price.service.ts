@@ -1,10 +1,14 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { StockPrice } from './stock-price.entity';
 import { MoreThan, Repository } from 'typeorm';
 import { StockPriceDto } from './stock-price.dto';
 import { StockPriceWithMovingAverageDto } from './stock-price-with-moving-average.dto';
 import { MovingAverageCalculator } from './util/moving-average-calculator';
+import { StockDataService } from 'src/services/stock-data/stock-data.service';
+
+const MOVING_AVERAGE_WINDOW_IN_MINUTES = 10;
+const MOVING_AVERAGE_VALUE_AGGEREGATION_IN_MINUTES = 1;
 
 @Injectable()
 export class StockPriceService {
@@ -12,6 +16,7 @@ export class StockPriceService {
     @InjectRepository(StockPrice)
     private stockPriceRepository: Repository<StockPrice>,
     private movingAverageCalculator: MovingAverageCalculator,
+    private stockDataService: StockDataService,
   ) {}
 
   async saveStockPrice(stockPrice: StockPriceDto): Promise<void> {
@@ -21,21 +26,27 @@ export class StockPriceService {
   async getStockPriceForSymbol(
     symbol: string,
   ): Promise<StockPriceWithMovingAverageDto> {
-    const lastPrice = await this.stockPriceRepository.findOne({
-      where: {
-        symbol,
-      },
-      order: {
-        date: 'DESC',
-      },
-    });
+    let lastPrice: StockPriceDto | null =
+      await this.stockPriceRepository.findOne({
+        where: {
+          symbol,
+        },
+        order: {
+          date: 'DESC',
+        },
+      });
 
     if (!lastPrice) {
-      throw new NotFoundException(`No stock prices found for symbol ${symbol}`);
+      lastPrice = await this.stockDataService.fetchQuoteForSymbol(symbol);
+      await this.saveStockPrice(lastPrice);
     }
 
+    let movingAverage: number | null = null;
+
     const windowEnd = lastPrice.date;
-    const windowStart = new Date(windowEnd.valueOf() - 10 * 60 * 1000);
+    const windowStart = new Date(
+      windowEnd.valueOf() - MOVING_AVERAGE_WINDOW_IN_MINUTES * 60 * 1000,
+    );
 
     const recentPrices = await this.stockPriceRepository.find({
       where: {
@@ -47,13 +58,20 @@ export class StockPriceService {
       },
     });
 
-    const average = this.movingAverageCalculator.calculateMovingAverage(
-      recentPrices,
-      windowStart,
-      windowEnd,
-      1,
-    );
+    const minimalValueCount =
+      MOVING_AVERAGE_WINDOW_IN_MINUTES /
+      MOVING_AVERAGE_VALUE_AGGEREGATION_IN_MINUTES /
+      2;
 
-    return { ...recentPrices[0], movingAverage: average };
+    if (recentPrices.length > minimalValueCount) {
+      movingAverage = this.movingAverageCalculator.calculateMovingAverage(
+        recentPrices,
+        windowStart,
+        windowEnd,
+        MOVING_AVERAGE_VALUE_AGGEREGATION_IN_MINUTES,
+      );
+    }
+
+    return { ...lastPrice, movingAverage };
   }
 }
