@@ -1,4 +1,4 @@
-import { StockPrice } from '../stock-price.entity';
+import { StockPriceDto } from '../stock-price.dto';
 
 interface DataBucket {
   start: Date;
@@ -7,21 +7,26 @@ interface DataBucket {
 
 export class MovingAverageCalculator {
   calculateMovingAverage(
-    data: StockPrice[],
+    data: StockPriceDto[],
     windowStart: Date,
     windowEnd: Date,
     aggregationPeriodInMinutes: number,
   ) {
+    const minuteStartAtWindowStart = new Date(windowStart.getTime());
+    minuteStartAtWindowStart.setSeconds(0, 0);
+
+    const minuteEndAtWindowEnd = new Date(windowEnd.getTime() + 59 * 1000);
+    minuteEndAtWindowEnd.setSeconds(0, 0);
+
     const numberOfBuckets = Math.floor(
-      (windowEnd.getTime() - windowStart.getTime()) /
+      (minuteEndAtWindowEnd.getTime() - minuteStartAtWindowStart.getTime()) /
         60000 /
         aggregationPeriodInMinutes,
     );
 
     const buckets: DataBucket[] = [];
     for (let i = 0; i < numberOfBuckets; i++) {
-      const bucketStart = new Date(windowStart.getTime());
-      bucketStart.setSeconds(0, 0);
+      const bucketStart = new Date(minuteStartAtWindowStart.getTime());
       bucketStart.setTime(
         bucketStart.getTime() + i * 60 * 1000 * aggregationPeriodInMinutes,
       );
