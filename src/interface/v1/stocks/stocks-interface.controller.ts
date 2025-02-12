@@ -1,13 +1,7 @@
 import { Controller, Get, Header, Param, Put } from '@nestjs/common';
 import { VERSION } from '../constants';
 import { StocksInterfaceService } from './stocks-interface.service';
-import {
-  ApiHeader,
-  ApiOperation,
-  ApiParam,
-  ApiProperty,
-  ApiResponse,
-} from '@nestjs/swagger';
+import { ApiOperation, ApiParam, ApiResponse } from '@nestjs/swagger';
 import { StockDto } from './stock.dto';
 
 const STOCKS_PATH = `/stocks`;
