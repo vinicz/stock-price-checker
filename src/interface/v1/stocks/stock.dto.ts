@@ -9,7 +9,7 @@ export class StockDto {
   @Expose()
   updatedAt: number;
   @Expose()
-  movingAverage: number;
+  movingAverage: number | null;
 
   static fromStockPrice(stockPrice: StockPriceWithMovingAverageDto): StockDto {
     return {

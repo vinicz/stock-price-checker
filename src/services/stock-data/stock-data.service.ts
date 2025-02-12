@@ -43,7 +43,7 @@ export class StockDataService {
     return data.isOpen;
   }
 
-  async fetchQuoteBySymbol(symbol: string): Promise<StockPriceDto> {
+  async fetchQuoteForSymbol(symbol: string): Promise<StockPriceDto> {
     const finnHubToken = this.getApiToken();
 
     const { data } = await firstValueFrom(

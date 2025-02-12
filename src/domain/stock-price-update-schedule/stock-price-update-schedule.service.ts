@@ -27,7 +27,7 @@ export class StockPriceUpdateScheduleService {
     }
 
     // Fetch the current stock price to ensure the symbol is valid
-    const stockPrice = await this.stockDataService.fetchQuoteBySymbol(symbol);
+    const stockPrice = await this.stockDataService.fetchQuoteForSymbol(symbol);
     await this.stockPriceService.saveStockPrice(stockPrice);
 
     await this.stockPriceUpdateScheduleRepository.save({
@@ -36,7 +36,7 @@ export class StockPriceUpdateScheduleService {
   }
 
   @Cron('0 * * * * *')
-  async updateStockProces() {
+  async updateStockProcess() {
     this.logger.log('Running stock price update process');
 
     const isMarketOpen = await this.stockDataService.checkIfMarketIsOpen();
@@ -74,7 +74,7 @@ export class StockPriceUpdateScheduleService {
             await queryRunner.commitTransaction();
 
             const currentStockPrice =
-              await this.stockDataService.fetchQuoteBySymbol(
+              await this.stockDataService.fetchQuoteForSymbol(
                 runningSchedule.symbol,
               );
             await this.stockPriceService.saveStockPrice(currentStockPrice);

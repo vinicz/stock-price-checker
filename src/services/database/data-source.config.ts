@@ -16,5 +16,6 @@ function getConfig() {
 }
 
 const migrationGenerationDatasource = new DataSource(getConfig());
+// eslint-disable-next-line @typescript-eslint/no-floating-promises
 migrationGenerationDatasource.initialize();
 export default migrationGenerationDatasource;
